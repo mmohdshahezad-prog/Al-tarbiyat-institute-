@@ -1,0 +1,867 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Tabiyat Institute - Android Mobile App Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            850: '#0b3d2e',
+                            900: '#0d4d3a',
+                            950: '#06281e',
+                        },
+                        gold: {
+                            300: '#f3e5ab',
+                            400: '#e6c875',
+                            500: '#d4af37',
+                            600: '#b89228',
+                        },
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#f9f6ed',
+                            200: '#f2ebd9',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        arabic: ['"Amiri"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+        }
+
+        .bg-islamic-pattern {
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#d4af37 0.75px, transparent 0.75px), radial-gradient(#d4af37 0.75px, #fdfbf7 0.75px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            background-opacity: 0.08;
+        }
+
+        /* Phone mockup device frame */
+        .phone-container {
+            width: 100%;
+            max-width: 410px;
+            height: 840px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 12px #1e293b, 0 0 0 14px #334155;
+            border-radius: 48px;
+            position: relative;
+            overflow: hidden;
+            background-color: #fdfbf7;
+        }
+
+        .phone-fullscreen {
+            max-width: 100% !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        /* Camera Punch Hole */
+        .camera-notch {
+            width: 12px;
+            height: 12px;
+            background-color: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+        }
+
+        /* Custom Scrollbars inside mobile UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-0 md:p-6 transition-all duration-300">
+
+    <!-- TOP TOOLBAR (SIMULATOR CONTROLS) -->
+    <div id="controlsBar" class="mb-4 text-white text-xs sm:text-sm flex items-center gap-3 bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-full border border-slate-700 shadow-lg">
+        <span class="flex items-center gap-2 font-medium text-gold-400">
+            <i class="fa-brands fa-android text-emerald-400 text-base"></i> Android Play Store App Simulator
+        </span>
+        <span class="text-slate-500">|</span>
+        <button onclick="toggleFullscreen()" class="hover:text-gold-400 transition flex items-center gap-1.5 font-medium">
+            <i id="fullscreenIcon" class="fa-solid fa-expand"></i> <span id="fullscreenText">Toggle Device View</span>
+        </button>
+        <button onclick="refreshTime()" class="hover:text-gold-400 transition ml-2 text-slate-400" title="Sync Time">
+            <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+    </div>
+
+    <!-- MOBILE PHONE MOCKUP FRAME -->
+    <div id="phoneFrame" class="phone-container flex flex-col relative transition-all duration-300">
+        
+        <!-- Android Camera Punch Hole -->
+        <div class="camera-notch"></div>
+
+        <!-- 1. ANDROID STATUS BAR -->
+        <div class="bg-emerald-950 text-white text-[11px] px-6 pt-2 pb-1 flex justify-between items-center z-40 shrink-0 font-mono tracking-wider">
+            <span id="currentTime">10:30</span>
+            <div class="flex items-center space-x-2 text-[10px]">
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-signal"></i>
+                <span class="text-[10px] font-sans font-bold">5G</span>
+                <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
+            </div>
+        </div>
+
+        <!-- 2. TOP APP BAR -->
+        <div class="bg-emerald-900 text-white px-4 py-3 flex items-center justify-between shadow-md z-30 border-b border-gold-500/30 shrink-0">
+            <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchTab('home')">
+                <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center border border-gold-400/60 shadow-inner">
+                    <i class="fa-solid fa-book-quran text-gold-400 text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold font-arabic tracking-wide leading-none text-white">Al-Tabiyat</h1>
+                    <p class="text-[9px] text-gold-300 font-medium tracking-wider uppercase mt-0.5">Institute</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 text-sm">
+                <button onclick="switchTab('courses')" class="hover:text-gold-300 transition p-1" title="Search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button onclick="toggleNotifications()" class="hover:text-gold-300 transition relative p-1" title="Notifications">
+                    <i class="fa-regular fa-bell"></i>
+                    <span id="notifDot" class="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full"></span>
+                </button>
+                <button onclick="switchTab('profile')" class="w-7 h-7 rounded-full bg-gold-400/20 border border-gold-400 flex items-center justify-center text-xs font-bold text-gold-300">
+                    A
+                </button>
+            </div>
+        </div>
+
+        <!-- NOTIFICATION SHEET OVERLAY -->
+        <div id="notifSheet" class="hidden absolute top-14 inset-x-0 bg-white/95 backdrop-blur-md shadow-2xl z-40 border-b border-gold-400/40 p-4 transition duration-300 animate-fade-in text-xs">
+            <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-100">
+                <span class="font-bold text-emerald-900 flex items-center gap-1.5"><i class="fa-solid fa-bell text-gold-600"></i> Notifications</span>
+                <button onclick="toggleNotifications()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="space-y-2">
+                <div class="p-2 bg-emerald-50 rounded-lg border-l-2 border-emerald-800">
+                    <p class="font-bold text-emerald-950">Live Class Starting Soon!</p>
+                    <p class="text-[11px] text-slate-600">Quran Tajweed class starts at 05:00 PM today via Zoom.</p>
+                </div>
+                <div class="p-2 bg-amber-50 rounded-lg border-l-2 border-gold-500">
+                    <p class="font-bold text-amber-950">New Course Added</p>
+                    <p class="text-[11px] text-slate-600">Canva Graphic Designing batch 2 is now open for registration.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN SCROLLABLE BODY AREA -->
+        <div id="appBody" class="flex-grow overflow-y-auto bg-islamic-pattern no-scrollbar pb-20 relative">
+
+            <!-- TAB 1: HOME TAB -->
+            <div id="tab-home" class="p-4 space-y-5">
+                
+                <!-- Welcome Banner Card -->
+                <div class="bg-gradient-to-br from-emerald-900 via-emerald-850 to-emerald-950 rounded-2xl p-4 text-white shadow-lg border border-gold-500/40 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 text-gold-400 text-8xl font-arabic pointer-events-none">﷽</div>
+                    <div class="inline-block px-2.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/30 text-[10px] font-semibold mb-2">
+                        ✨ Welcome to Learning
+                    </div>
+                    <h2 class="text-lg font-bold font-arabic leading-snug text-gold-300">
+                        Empowering Girls & Women Through Knowledge
+                    </h2>
+                    <p class="text-xs text-emerald-100 mt-1 leading-relaxed opacity-90">
+                        Online Live Platform for Deeni, Dunyawi, and Skill Development.
+                    </p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <button onclick="switchTab('courses')" class="bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold text-xs px-4 py-2 rounded-xl shadow-md transition flex items-center gap-1.5">
+                            Explore Courses <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <button onclick="openRegisterModal()" class="bg-white/10 hover:bg-white/20 text-white font-semibold text-xs px-3 py-2 rounded-xl border border-white/20 transition">
+                            Register
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Action Categories Bar -->
+                <div>
+                    <h3 class="text-xs font-bold text-emerald-900 uppercase tracking-wider mb-2 flex items-center justify-between">
+                        <span>Learning Departments</span>
+                        <span onclick="switchTab('courses')" class="text-[10px] text-gold-600 font-semibold cursor-pointer">View All</span>
+                    </h3>
+                    <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-semibold">
+                        <div onclick="filterAndSwitch('deeni')" class="bg-white border border-emerald-100 p-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-emerald-800 transition">
+                            <div class="w-9 h-9 mx-auto mb-1 bg-emerald-900 text-gold-400 rounded-xl flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-mosque"></i>
+                            </div>
+                            <span class="text-slate-800">Deeni</span>
+                        </div>
+                        <div onclick="filterAndSwitch('dunyawi')" class="bg-white border border-sky-100 p-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-sky-800 transition">
+                            <div class="w-9 h-9 mx-auto mb-1 bg-sky-700 text-white rounded-xl flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-laptop-code"></i>
+                            </div>
+                            <span class="text-slate-800">Dunyawi</span>
+                        </div>
+                        <div onclick="filterAndSwitch('empowerment')" class="bg-white border border-rose-100 p-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-rose-800 transition">
+                            <div class="w-9 h-9 mx-auto mb-1 bg-rose-700 text-white rounded-xl flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-hand-holding-heart"></i>
+                            </div>
+                            <span class="text-slate-800">Empower</span>
+                        </div>
+                        <div onclick="filterAndSwitch('free')" class="bg-white border border-amber-100 p-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-amber-800 transition">
+                            <div class="w-9 h-9 mx-auto mb-1 bg-amber-500 text-white rounded-xl flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-gift"></i>
+                            </div>
+                            <span class="text-slate-800">Free</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Courses Horizontal Scroll -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Featured Courses</h3>
+                        <span onclick="switchTab('courses')" class="text-[10px] text-gold-600 font-semibold cursor-pointer">See All</span>
+                    </div>
+
+                    <div id="homeFeaturedCourses" class="flex gap-3 overflow-x-auto no-scrollbar pt-1 pb-2">
+                        <!-- Horizontal course cards injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Why Choose Us Card -->
+                <div class="bg-gradient-to-br from-cream-100 to-amber-50 border border-gold-400/50 p-4 rounded-2xl shadow-sm">
+                    <h3 class="text-xs font-bold text-emerald-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-award text-gold-600"></i> Why Choose Al-Tabiyat?
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-700 font-medium">
+                        <div class="bg-white/80 p-2 rounded-xl border border-amber-200/60 flex items-center gap-2">
+                            <i class="fa-solid fa-video text-emerald-800"></i> Live Zoom Classes
+                        </div>
+                        <div class="bg-white/80 p-2 rounded-xl border border-amber-200/60 flex items-center gap-2">
+                            <i class="fa-solid fa-person-dress text-emerald-800"></i> Qualified Female Teachers
+                        </div>
+                        <div class="bg-white/80 p-2 rounded-xl border border-amber-200/60 flex items-center gap-2">
+                            <i class="fa-solid fa-language text-emerald-800"></i> Hindi/Urdu/English
+                        </div>
+                        <div class="bg-white/80 p-2 rounded-xl border border-amber-200/60 flex items-center gap-2">
+                            <i class="fa-solid fa-certificate text-emerald-800"></i> Completion Certificate
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Stats Grid -->
+                <div class="bg-emerald-900 text-white rounded-2xl p-3 border border-gold-400/40 grid grid-cols-4 gap-1 text-center">
+                    <div>
+                        <div class="text-gold-300 text-sm font-bold">100+</div>
+                        <div class="text-[9px] text-emerald-200">Students</div>
+                    </div>
+                    <div>
+                        <div class="text-gold-300 text-sm font-bold">10+</div>
+                        <div class="text-[9px] text-emerald-200">Courses</div>
+                    </div>
+                    <div>
+                        <div class="text-gold-300 text-sm font-bold">Female</div>
+                        <div class="text-[9px] text-emerald-200">Scholars</div>
+                    </div>
+                    <div>
+                        <div class="text-gold-300 text-sm font-bold">Live</div>
+                        <div class="text-[9px] text-emerald-200">Online</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: COURSES TAB -->
+            <div id="tab-courses" class="hidden p-4 space-y-4">
+                <div>
+                    <h2 class="text-base font-bold font-arabic text-emerald-900">Explore Courses</h2>
+                    <p class="text-[11px] text-slate-500">Find the right program for your spiritual & worldly growth</p>
+                </div>
+
+                <!-- Mobile Search Bar -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="courseSearchInput" onkeyup="handleCourseSearch()" placeholder="Search Quran, English, Canva..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-800 shadow-sm">
+                </div>
+
+                <!-- Chips Filter -->
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar text-[11px] font-semibold py-1">
+                    <button onclick="filterCourses('all')" id="chip-all" class="chip-btn px-3 py-1.5 rounded-xl bg-emerald-900 text-white shadow-sm shrink-0">All</button>
+                    <button onclick="filterCourses('deeni')" id="chip-deeni" class="chip-btn px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 shrink-0">Deeni</button>
+                    <button onclick="filterCourses('dunyawi')" id="chip-dunyawi" class="chip-btn px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 shrink-0">Dunyawi</button>
+                    <button onclick="filterCourses('empowerment')" id="chip-empowerment" class="chip-btn px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 shrink-0">Empowerment</button>
+                    <button onclick="filterCourses('free')" id="chip-free" class="chip-btn px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 shrink-0">Free</button>
+                </div>
+
+                <!-- Vertical Courses List -->
+                <div id="fullCourseList" class="space-y-3">
+                    <!-- Course cards rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- TAB 3: MY LEARNING TAB -->
+            <div id="tab-mylearning" class="hidden p-4 space-y-4">
+                <div>
+                    <h2 class="text-base font-bold font-arabic text-emerald-900">My Learning Dashboard</h2>
+                    <p class="text-[11px] text-slate-500">Track your enrolled courses and class schedule</p>
+                </div>
+
+                <!-- Overall Progress Card -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-800">Overall Course Completion</span>
+                        <span class="text-xs font-extrabold text-emerald-900">65%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-emerald-800 h-2.5 rounded-full" style="width: 65%"></div>
+                    </div>
+                </div>
+
+                <!-- Enrolled Course 1 -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm space-y-3">
+                    <div class="flex gap-3 items-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 relative">
+                            <img src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?auto=format&fit=crop&q=80&w=200" alt="Quran" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-play"></i></div>
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-[9px] bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded-full">Deeni Course</span>
+                            <h4 class="font-bold text-xs text-slate-900 mt-0.5">Quran with Tajweed</h4>
+                            <p class="text-[10px] text-slate-500">Instructor: Ustadha Alima Syeda</p>
+                            <div class="mt-1.5 flex items-center gap-2">
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-emerald-800 h-1.5 rounded-full" style="width: 80%"></div>
+                                </div>
+                                <span class="text-[9px] font-bold text-slate-600">80%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex justify-between items-center">
+                        <span class="text-[10px] text-emerald-800 font-semibold"><i class="fa-solid fa-circle text-[7px] text-emerald-500"></i> Next: Makhraj Rules Part 4</span>
+                        <button onclick="openCourseDetails('quran-tajweed')" class="bg-emerald-900 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg shadow-sm">
+                            Continue <i class="fa-solid fa-play text-[8px] ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enrolled Course 2 -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm space-y-3">
+                    <div class="flex gap-3 items-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 relative">
+                            <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&q=80&w=200" alt="English" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-play"></i></div>
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-[9px] bg-sky-100 text-sky-900 font-bold px-2 py-0.5 rounded-full">Dunyawi Course</span>
+                            <h4 class="font-bold text-xs text-slate-900 mt-0.5">Spoken English Skills</h4>
+                            <p class="text-[10px] text-slate-500">Instructor: Sister Mariam Khan</p>
+                            <div class="mt-1.5 flex items-center gap-2">
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-sky-700 h-1.5 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <span class="text-[9px] font-bold text-slate-600">45%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex justify-between items-center">
+                        <span class="text-[10px] text-sky-800 font-semibold"><i class="fa-solid fa-circle text-[7px] text-amber-500"></i> Next: Daily Conversation Practice</span>
+                        <button onclick="openCourseDetails('spoken-english')" class="bg-sky-800 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg shadow-sm">
+                            Continue <i class="fa-solid fa-play text-[8px] ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 4: COMMUNITY & Q&A TAB -->
+            <div id="tab-community" class="hidden p-4 space-y-4">
+                <div>
+                    <h2 class="text-base font-bold font-arabic text-emerald-900">Student Q&A Community</h2>
+                    <p class="text-[11px] text-slate-500">Ask questions and discuss lessons with peers and teachers</p>
+                </div>
+
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                    <textarea placeholder="Write your question or request guidance..." class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-800" rows="2"></textarea>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-400">Sister-only safe community forum</span>
+                        <button onclick="alert('JazakAllah Khair! Your post has been submitted for teacher review.')" class="bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold">Post Question</button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 flex items-center justify-center text-[10px] font-bold">A</div>
+                            <div>
+                                <span class="font-bold text-xs text-slate-800">Amina B.</span>
+                                <span class="text-[9px] text-slate-400"> • 2 hours ago</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-700">What is the best way to revise Tajweed Rules for Noon Sakinah at home?</p>
+                        <div class="bg-emerald-50 p-2 rounded-xl text-[11px] text-emerald-950 mt-2 border-l-2 border-emerald-800">
+                            <strong>Ustadha Alima:</strong> Assalamu Alaikum! Practice 10 minutes daily after Fajr reading Surah Al-Mulk.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: PROFILE TAB -->
+            <div id="tab-profile" class="hidden p-4 space-y-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center shadow-sm relative">
+                    <div class="w-16 h-16 bg-emerald-900 rounded-full border-2 border-gold-400 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2">
+                        A
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-900">Ayesha Female Student</h3>
+                    <p class="text-[11px] text-slate-500">Student ID: AT-2026-88</p>
+                    <span class="inline-block mt-2 px-3 py-0.5 bg-emerald-100 text-emerald-900 rounded-full text-[10px] font-bold">Active Scholar</span>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden text-xs shadow-sm divide-y divide-slate-100">
+                    <button onclick="openRegisterModal()" class="w-full text-left p-3 flex items-center justify-between hover:bg-slate-50">
+                        <span class="flex items-center gap-2.5 font-medium text-slate-700"><i class="fa-solid fa-user-pen text-emerald-800"></i> New Batch Registration</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-[10px]"></i>
+                    </button>
+                    <button onclick="toggleNotifications()" class="w-full text-left p-3 flex items-center justify-between hover:bg-slate-50">
+                        <span class="flex items-center gap-2.5 font-medium text-slate-700"><i class="fa-regular fa-bell text-emerald-800"></i> Class Notifications</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-[10px]"></i>
+                    </button>
+                    <button onclick="alert('Language changed to Hindi/Urdu support')" class="w-full text-left p-3 flex items-center justify-between hover:bg-slate-50">
+                        <span class="flex items-center gap-2.5 font-medium text-slate-700"><i class="fa-solid fa-language text-emerald-800"></i> App Language (Urdu/Hindi/English)</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-[10px]"></i>
+                    </button>
+                    <button onclick="openModal('contactModal')" class="w-full text-left p-3 flex items-center justify-between hover:bg-slate-50">
+                        <span class="flex items-center gap-2.5 font-medium text-slate-700"><i class="fa-solid fa-headset text-emerald-800"></i> Contact Student Support</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. BOTTOM NAVIGATION BAR -->
+        <div class="bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around items-center z-30 absolute bottom-0 inset-x-0 shadow-lg">
+            <button onclick="switchTab('home')" id="nav-home" class="nav-item flex flex-col items-center text-emerald-900 transition">
+                <i class="fa-solid fa-house text-base"></i>
+                <span class="text-[9px] font-bold mt-0.5">Home</span>
+            </button>
+            <button onclick="switchTab('courses')" id="nav-courses" class="nav-item flex flex-col items-center text-slate-400 transition">
+                <i class="fa-solid fa-book-open text-base"></i>
+                <span class="text-[9px] font-bold mt-0.5">Courses</span>
+            </button>
+            <button onclick="switchTab('mylearning')" id="nav-mylearning" class="nav-item flex flex-col items-center text-slate-400 transition relative">
+                <i class="fa-solid fa-graduation-cap text-base"></i>
+                <span class="text-[9px] font-bold mt-0.5">My Learning</span>
+                <span class="absolute top-0 right-3 w-1.5 h-1.5 bg-emerald-800 rounded-full"></span>
+            </button>
+            <button onclick="switchTab('community')" id="nav-community" class="nav-item flex flex-col items-center text-slate-400 transition">
+                <i class="fa-solid fa-comments text-base"></i>
+                <span class="text-[9px] font-bold mt-0.5">Q&A</span>
+            </button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="nav-item flex flex-col items-center text-slate-400 transition">
+                <i class="fa-solid fa-user text-base"></i>
+                <span class="text-[9px] font-bold mt-0.5">Profile</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1: COURSE DETAILS / VIDEO PLAYER VIEW -->
+    <div id="courseModal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl border border-gold-400/50 max-h-[90%] flex flex-col">
+            
+            <!-- Video Player Placeholder -->
+            <div class="relative bg-black h-48 flex items-center justify-center shrink-0">
+                <img id="modalCourseImage" src="" alt="Course cover" class="w-full h-full object-cover opacity-60">
+                <button onclick="playDemoVideo()" class="absolute w-12 h-12 bg-emerald-900 text-gold-400 rounded-full flex items-center justify-center shadow-lg border-2 border-gold-400 hover:scale-105 transition">
+                    <i class="fa-solid fa-play text-lg ml-0.5"></i>
+                </button>
+                <button onclick="closeModal('courseModal')" class="absolute top-3 right-3 text-white bg-black/50 hover:bg-black/80 w-7 h-7 rounded-full flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-4 overflow-y-auto space-y-3 text-xs flex-grow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span id="modalCourseCategory" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-900">Deeni</span>
+                        <h3 id="modalCourseTitle" class="text-base font-bold text-slate-900 mt-1 font-arabic">Course Title</h3>
+                    </div>
+                    <span id="modalCourseType" class="bg-gold-100 text-gold-900 px-2 py-0.5 rounded-md font-bold text-[10px]">Paid</span>
+                </div>
+
+                <p id="modalCourseDesc" class="text-slate-600 leading-relaxed text-[11px]">Description text goes here...</p>
+
+                <!-- Syllabus Accordion -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                    <h4 class="font-bold text-emerald-900 text-[11px]">Course Syllabus Highlights</h4>
+                    <div class="space-y-1.5 text-[10px] text-slate-700">
+                        <div class="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-100">
+                            <span>1. Introduction & Basic Rules</span>
+                            <i class="fa-solid fa-circle-check text-emerald-800"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-100">
+                            <span>2. Interactive Practical Exercises</span>
+                            <i class="fa-regular fa-circle text-slate-300"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-100">
+                            <span>3. Weekly Live Q&A Session</span>
+                            <i class="fa-regular fa-circle text-slate-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="p-3 border-t border-slate-200 bg-white flex gap-2 shrink-0">
+                <button onclick="closeModal('courseModal'); openRegisterModal();" class="flex-1 bg-emerald-900 hover:bg-emerald-850 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">
+                    Enroll Now <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: QUICK REGISTRATION FORM -->
+    <div id="registerModal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-2xl p-4 shadow-2xl border border-gold-400 relative text-xs space-y-3">
+            <button onclick="closeModal('registerModal')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <div class="text-center">
+                <h3 class="font-bold text-emerald-900 text-sm font-arabic">Quick Batch Registration</h3>
+                <p class="text-[10px] text-slate-500">Al-Tabiyat Institute Mobile Admission</p>
+            </div>
+
+            <form onsubmit="handleRegistration(event)" class="space-y-2.5">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Student Name</label>
+                    <input type="text" required placeholder="Enter student name" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-800">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-700 mb-0.5">WhatsApp Mobile No.</label>
+                    <input type="tel" required placeholder="+91 XXXXX XXXXX" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-800">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Select Course</label>
+                    <select id="modalCourseSelect" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none">
+                        <option value="Quran with Tajweed">Quran with Tajweed (Deeni)</option>
+                        <option value="Spoken English">Spoken English (Dunyawi)</option>
+                        <option value="Basic Computer Skills">Basic Computer Skills (Dunyawi)</option>
+                        <option value="Canva Designing">Canva Graphic Designing (Empowerment)</option>
+                        <option value="Seerat-un-Nabi">Seerat-un-Nabi ﷺ (Free)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-900 text-white font-bold py-2 rounded-xl text-xs shadow mt-1">
+                    Submit Registration
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CONTACT SUPPORT -->
+    <div id="contactModal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-2xl p-4 shadow-2xl border border-gold-400 relative text-xs space-y-3">
+            <button onclick="closeModal('contactModal')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <div class="text-center">
+                <h3 class="font-bold text-emerald-900 text-sm">Contact Support</h3>
+                <p class="text-[10px] text-slate-500">Al-Tabiyat Helpline</p>
+            </div>
+
+            <div class="space-y-2 bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-[11px]">
+                <p><i class="fa-brands fa-whatsapp text-emerald-800"></i> <strong>WhatsApp:</strong> +91 98765 43210</p>
+                <p><i class="fa-solid fa-envelope text-emerald-800"></i> <strong>Email:</strong> support@altabiyatinstitute.com</p>
+            </div>
+
+            <button onclick="closeModal('contactModal')" class="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- APP CONTROLLER JAVASCRIPT LOGIC -->
+    <script>
+        // Courses Master Data
+        const courses = [
+            {
+                id: 'quran-tajweed',
+                title: 'Quran with Tajweed',
+                category: 'deeni',
+                type: 'Paid',
+                image: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?auto=format&fit=crop&q=80&w=400',
+                description: 'Learn correct Quranic pronunciation, Makharij, and rules from qualified female teachers.',
+                rating: '4.9 ★'
+            },
+            {
+                id: 'spoken-english',
+                title: 'Spoken English',
+                category: 'dunyawi',
+                type: 'Paid',
+                image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&q=80&w=400',
+                description: 'Build confidence in everyday English conversation and daily vocabulary.',
+                rating: '4.8 ★'
+            },
+            {
+                id: 'basic-computer',
+                title: 'Basic Computer Skills',
+                category: 'dunyawi',
+                type: 'Paid',
+                image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=400',
+                description: 'Master MS Office, Word, Excel, PowerPoint, and online safety essentials.',
+                rating: '4.7 ★'
+            },
+            {
+                id: 'canva-designing',
+                title: 'Canva Graphic Designing',
+                category: 'empowerment',
+                type: 'Paid',
+                image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=400',
+                description: 'Create beautiful graphics, social media posts, and posters on phone & computer.',
+                rating: '4.9 ★'
+            },
+            {
+                id: 'seerat-study',
+                title: 'Seerat-un-Nabi ﷺ',
+                category: 'deeni',
+                type: 'Free',
+                image: 'https://images.unsplash.com/photo-1542816417-0983cbe82752?auto=format&fit=crop&q=80&w=400',
+                description: 'Inspiring journey into the life and lessons of Prophet Muhammad ﷺ.',
+                rating: '5.0 ★'
+            }
+        ];
+
+        // Simulator Time Display Sync
+        function refreshTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('currentTime').innerText = hours + ':' + minutes;
+        }
+
+        // Toggle Simulator View Mode
+        let isFullscreen = false;
+        function toggleFullscreen() {
+            const frame = document.getElementById('phoneFrame');
+            const icon = document.getElementById('fullscreenIcon');
+            const text = document.getElementById('fullscreenText');
+            
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                frame.classList.add('phone-fullscreen');
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+                text.innerText = "Exit Device View";
+            } else {
+                frame.classList.remove('phone-fullscreen');
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+                text.innerText = "Toggle Device View";
+            }
+        }
+
+        // Bottom Tab Switcher
+        function switchTab(tabId) {
+            // Hide all tab containers
+            const tabs = ['home', 'courses', 'mylearning', 'community', 'profile'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
+                
+                const nav = document.getElementById(`nav-${t}`);
+                if (nav) {
+                    nav.classList.remove('text-emerald-900');
+                    nav.classList.add('text-slate-400');
+                }
+            });
+
+            // Activate target tab
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('text-emerald-900');
+            }
+
+            // Scroll body to top
+            document.getElementById('appBody').scrollTop = 0;
+        }
+
+        // Render Featured Horizontal Carousel on Home
+        function renderHomeFeatured() {
+            const container = document.getElementById('homeFeaturedCourses');
+            container.innerHTML = '';
+
+            courses.forEach(c => {
+                container.innerHTML += `
+                    <div onclick="openCourseDetails('${c.id}')" class="bg-white border border-slate-200 rounded-2xl p-2.5 w-48 shrink-0 shadow-sm cursor-pointer hover:border-gold-400 transition">
+                        <div class="h-24 rounded-xl overflow-hidden relative mb-2">
+                            <img src="${c.image}" alt="${c.title}" class="w-full h-full object-cover">
+                            <span class="absolute top-1.5 left-1.5 text-[9px] bg-emerald-900 text-gold-300 font-bold px-2 py-0.5 rounded-full">${c.type}</span>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-900 truncate">${c.title}</h4>
+                        <p class="text-[10px] text-slate-500 line-clamp-1 mt-0.5">${c.description}</p>
+                        <div class="mt-2 flex justify-between items-center text-[10px]">
+                            <span class="text-amber-600 font-bold">${c.rating}</span>
+                            <span class="text-emerald-900 font-bold">Details →</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Render Courses List in Courses Tab
+        function renderFullCoursesList(filteredItems) {
+            const container = document.getElementById('fullCourseList');
+            container.innerHTML = '';
+
+            filteredItems.forEach(c => {
+                const categoryBadge = c.category === 'deeni' 
+                    ? '<span class="bg-emerald-100 text-emerald-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Deeni</span>'
+                    : c.category === 'dunyawi'
+                    ? '<span class="bg-sky-100 text-sky-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Dunyawi</span>'
+                    : '<span class="bg-rose-100 text-rose-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Empowerment</span>';
+
+                container.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex gap-3 items-center">
+                        <img src="${c.image}" alt="${c.title}" class="w-20 h-20 rounded-xl object-cover shrink-0">
+                        <div class="flex-grow min-w-0">
+                            <div class="flex gap-1.5 items-center mb-1">
+                                ${categoryBadge}
+                                <span class="text-[9px] text-slate-400">${c.type}</span>
+                            </div>
+                            <h4 class="font-bold text-xs text-slate-900 truncate">${c.title}</h4>
+                            <p class="text-[10px] text-slate-500 line-clamp-2 mt-0.5">${c.description}</p>
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-amber-600">${c.rating}</span>
+                                <button onclick="openCourseDetails('${c.id}')" class="bg-emerald-900 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Filter Courses in Courses Tab
+        function filterCourses(category) {
+            document.querySelectorAll('.chip-btn').forEach(b => {
+                b.classList.remove('bg-emerald-900', 'text-white');
+                b.classList.add('bg-white', 'text-slate-600');
+            });
+
+            const activeBtn = document.getElementById(`chip-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-emerald-900', 'text-white');
+                activeBtn.classList.remove('bg-white', 'text-slate-600');
+            }
+
+            if (category === 'all') {
+                renderFullCoursesList(courses);
+            } else if (category === 'free') {
+                renderFullCoursesList(courses.filter(c => c.type === 'Free'));
+            } else {
+                renderFullCoursesList(courses.filter(c => c.category === category));
+            }
+        }
+
+        function filterAndSwitch(category) {
+            switchTab('courses');
+            filterCourses(category);
+        }
+
+        function handleCourseSearch() {
+            const query = document.getElementById('courseSearchInput').value.toLowerCase();
+            const filtered = courses.filter(c => 
+                c.title.toLowerCase().includes(query) || 
+                c.description.toLowerCase().includes(query)
+            );
+            renderFullCoursesList(filtered);
+        }
+
+        // Course Modal Functionality
+        function openCourseDetails(courseId) {
+            const c = courses.find(item => item.id === courseId);
+            if (!c) return;
+
+            document.getElementById('modalCourseImage').src = c.image;
+            document.getElementById('modalCourseTitle').innerText = c.title;
+            document.getElementById('modalCourseDesc').innerText = c.description;
+            document.getElementById('modalCourseCategory').innerText = c.category.toUpperCase();
+            document.getElementById('modalCourseType').innerText = c.type;
+
+            openModal('courseModal');
+        }
+
+        function playDemoVideo() {
+            alert("Playing live lecture preview for Al-Tabiyat Institute students.");
+        }
+
+        function toggleNotifications() {
+            const sheet = document.getElementById('notifSheet');
+            sheet.classList.toggle('hidden');
+            document.getElementById('notifDot').classList.add('hidden');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openRegisterModal() {
+            openModal('registerModal');
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            alert("JazakAllah Khair! Application submitted. Our support team will connect with you via WhatsApp.");
+            closeModal('registerModal');
+        }
+
+        // Window Init
+        window.onload = function() {
+            refreshTime();
+            setInterval(refreshTime, 30000);
+            renderHomeFeatured();
+            renderFullCoursesList(courses);
+        }
+    </script>
+</body>
+</html>
+```
